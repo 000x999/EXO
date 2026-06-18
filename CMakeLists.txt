@@ -12,6 +12,7 @@ endif()
 
 add_library(exir_core STATIC
   exir/src/graph.cpp
+  exir/src/verifier.cpp
 )
 
 target_include_directories(exir_core PUBLIC

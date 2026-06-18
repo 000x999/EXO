@@ -3,8 +3,9 @@
 
 #include <cstdint> 
 #include <string> 
+#include <vector> 
 
-namespace exir_graph{
+namespace exir{
 enum class dtype{
   float32, 
   int8, 
@@ -21,8 +22,8 @@ enum class op_kind{
 }; 
 
 struct tensor_type{
-  int64_t *shape; 
-  dtype element = dtype::float32; 
+  std::vector<int64_t> shape;
+  dtype                element = dtype::float32; 
 }; 
 
 using value_id = uint32_t; 
@@ -36,16 +37,30 @@ struct value{
 
 
 struct node{
-  node_id   id   {}; 
-  op_kind   kind {}; 
-  value_id *inputs ;
-  value_id *outputs;
+  node_id               id   {}; 
+  op_kind               kind {}; 
+  std::vector<value_id> inputs ;
+  std::vector<value_id> outputs;
+  std::string           name = ""; 
 };
 
-struct graph{
-  value *values; 
-  node  *nodes; 
+class graph{
+public:
+  value_id add_value (tensor_type type, std::string name = ""); 
+  node_id  add_node  (op_kind kind, std::vector<value_id> inputs, std::vector<value_id> outputs, std::string name = "");
+
+  const std::vector<value> &values() const; 
+  const std::vector<node>  &nodes () const; 
+
+  void print() const; 
+
+private:
+  std::vector<value> graph_values; 
+  std::vector<node>  graph_nodes; 
 };
+
+const char *to_string (dtype   type);
+const char *to_string (op_kind kind); 
 
 } //namespace
 #endif 
