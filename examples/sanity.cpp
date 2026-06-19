@@ -1,5 +1,7 @@
 #include "exir/graph.hpp"
 #include "exir/verifier.hpp"
+#include "exo/passes/debug_print_pass.hpp"
+#include "exo/pass_manager.hpp"
 #include <iostream>
 
 int main(){
@@ -16,12 +18,21 @@ int main(){
   g.add_node(exir::op_kind::relu    , {lin_out}      , {relu_out}, "relu_0"       ); 
   g.add_node(exir::op_kind::output  , {relu_out}     , {output}  , "model_output" );
 
-  g.print();
+  ///g.print();
+  
+  exo::pass_manager pm;
+  pm.add_pass(std::make_unique<exo::debug_print_pass>());
+  
+  if(!pm.run_pass(g)){
+    return 1; 
+  }
 
   if(!exir::verify_graph(g)){
     std::cerr << "::EXIR VERIF FAILED::\n";
     return 1; 
   }
+  
+
   std::cout << ":: EXIR VERIF OK ::\n";
   std::cout << ":: EXO SANITY OK ::\n"; 
   return 0;

@@ -21,6 +21,8 @@ target_include_directories(exir_core PUBLIC
 
 add_library(exo_core STATIC
   exo/src/compiler.cpp
+  exo/src/pass_manager.cpp
+  exo/src/passes/debug_print_pass.cpp
 )
 
 target_include_directories(exo_core PUBLIC
