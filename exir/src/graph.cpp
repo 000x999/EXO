@@ -15,7 +15,7 @@ exir::value_id exir::graph::add_value(exir::tensor_type type, std::string name){
 }
 
 exir::node_id exir::graph::add_node(op_kind kind, std::vector<value_id> inputs, std::vector<value_id> outputs, std::string name){
-  exir::node_id current_id = static_cast<exir::node_id> (graph_nodes.size()); 
+  exir::node_id current_id = static_cast<exir::node_id>(graph_nodes.size()); 
 
   for(exir::value_id input : inputs){
     if(input >= graph_values.size()){
@@ -72,6 +72,24 @@ const std::vector<exir::node> &exir::graph::nodes() const {
   return graph_nodes; 
 }
 
+bool exir::graph::validate_shape() const{
+  for(size_t i = 0; i < graph_values.size(); ++i){
+    if(graph_values[i].type.shape.empty()){
+      std::cout << "::EXIR GRAPH:: node %" << graph_values[i].id 
+                << "contains an empty shape\n"; 
+      return false; 
+    }else{
+      for(size_t j = 0; j < graph_values[i].type.shape.size(); ++j){
+        if(graph_values[i].type.shape[j] <= 0){
+          std::cout << "::EXIR GRAPH:: node %" << graph_values[i].id
+                    << "contains a 0 or negative sized layer\n"; 
+          return false; 
+        }
+      }
+    }
+  }
+  return true;
+}
 
 void exir::graph::print() const{
   std::cout << "=== EXIR Graph ===\n";

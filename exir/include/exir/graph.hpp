@@ -10,7 +10,7 @@ enum class dtype{
   float32, 
   int8, 
   uint8, 
-  int32
+  int32,
 };
 
 enum class op_kind{
@@ -30,8 +30,8 @@ using value_id = uint32_t;
 using node_id  = uint32_t; 
 
 struct value{
-  value_id    id   {};
-  tensor_type type {};
+  value_id    id   {}; // uint32_t identifier
+  tensor_type type {}; // shape (vector) + dtype (f32)
   std::string name   ; 
 };
 
@@ -39,20 +39,24 @@ struct value{
 struct node{
   node_id               id   {}; 
   op_kind               kind {}; 
-  std::vector<value_id> inputs ;
-  std::vector<value_id> outputs;
+  std::vector<value_id> inputs ; // vector of uint32_t for inputs 
+  std::vector<value_id> outputs; // vector of uint32_t for outputs
   std::string           name = ""; 
 };
 
 class graph{
 public:
   value_id add_value (tensor_type type, std::string name = ""); 
-  node_id  add_node  (op_kind kind, std::vector<value_id> inputs, std::vector<value_id> outputs, std::string name = "");
+  node_id  add_node  (op_kind kind    , std::vector<value_id> inputs, std::vector<value_id> outputs, std::string name = "");
 
-  const std::vector<value> &values() const; 
-  const std::vector<node>  &nodes () const; 
+  const std::vector<value> &values() const; // vector of uint32_t identifiers
+  const std::vector<node>  &nodes () const;
 
-  void print() const; 
+  void  mutate_node               (exir::node_id id_in , std::string new_name);
+  void  mutate_value              (exir::value_id id_in, std::string new_name);
+  
+  void  print                     () const; 
+  bool  validate_shape            () const; 
 
 private:
   std::vector<value> graph_values; 

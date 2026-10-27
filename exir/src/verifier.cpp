@@ -41,7 +41,7 @@ bool exir::verify_graph(const exir::graph &graph_in){
                     << " must have 0 inputs and 1 output\n"; 
           flag = false;
         }
-        break; 
+        break;
       }
 
       case exir::op_kind::constant:{
@@ -59,10 +59,11 @@ bool exir::verify_graph(const exir::graph &graph_in){
           flag = false;
           break;
         }
-        
+       
         const value &input_x  = values[n.inputs [0]]; 
+        /* when doing values[n.inputs[0]], we are accessing the metadata of the node from the inputs at [0] */
         const value &input_w  = values[n.inputs [1]]; 
-        const value &output_y = values[n.outputs[0]];
+        const value &output_y = values[n.outputs[0]]; 
 
         if(input_x.type.shape.size() != 2 || input_w.type.shape.size() != 2 || output_y.type.shape.size() != 2){
           std::cerr << "::EXIR VERIFIER:: linear node %" << n.id 
@@ -71,16 +72,35 @@ bool exir::verify_graph(const exir::graph &graph_in){
           break; 
         }
         
-        const auto batch            = input_x.type.shape[0]; 
-        const auto input_features   = input_x.type.shape[1];
+        const auto batch            = input_x.type.shape[0];  // returns the current input tensors input size  m  
+        const auto input_features   = input_x.type.shape[1];  // returns the current input tensors output size k 
 
-        const auto w_input_features = input_w.type.shape[0]; 
-        const auto output_features  = input_w.type.shape[1]; 
+        const auto w_input_features = input_w.type.shape[0];  // projection weights are of size k 
+        const auto output_features  = input_w.type.shape[1];  // output features are of size n 
 
         if(input_features != w_input_features){
           std::cerr << "::EXIR VERIFIER:: linear node %"    << n.id 
                     << " shape mismatch :: input features " << input_features
                     << " != weight input_features " << w_input_features << "\n"; 
+          flag = false; 
+        }
+        
+        if(input_x.type.element != input_w.type.element){
+          std::cerr << "::EXIR VERIFIER:: linear node %" << n.id 
+                    << " dtype mismatch between input and output features" << '\n';
+          flag = false; 
+        }
+
+        if(input_x.type.element != output_y.type.element || input_x.type.element != input_w.type.element){
+          std::cerr << "::EXIR VERIFIER:: output node %" << n.id 
+                    << " input/output nodes must have matching dtypes\n"; 
+          flag = false; 
+        }
+
+        if(input_x.type.element == exir::dtype::int8 && output_y.type.element == exir::dtype::int8
+          && input_w.type.element == exir::dtype::int8){
+          std::cerr << "::EXIR VERIFIER:: output node %" << n.id 
+                    << " input/output nodes must have dtypes \n"; 
           flag = false; 
         }
 
@@ -123,14 +143,31 @@ bool exir::verify_graph(const exir::graph &graph_in){
 
         const value &input_x  = values[n.inputs [0]]; 
         const value &output_y = values[n.outputs[0]];
-
+        const value &input_w  = values[n.inputs [0]]; 
+/*
         if(!same_shape(input_x.type, output_y.type)){
           std::cerr << "::EXIR VERIFIER:: output node %" << n.id
                     << " input/output shapes must match\n";
           flag = false; 
         }
+*/
+        if(input_x.type.element == exir::dtype::int8 && output_y.type.element == exir::dtype::int8){
+          std::cerr << "::EXIR VERIFIER:: output node %" << n.id 
+                    << " input/output nodes must have dtypes \n"; 
+          flag = false; 
+        }
+
+        if(input_x.type.element != output_y.type.element){
+          std::cerr << "::EXIR VERIFIER:: output node %" << n.id 
+                    << " input/output nodes must have dtypes \n"; 
+          flag = false; 
+        }
         break; 
       }
+    }
+
+    if(!graph_in.validate_shape()){
+      flag = false; 
     }
   }
   return flag; 
